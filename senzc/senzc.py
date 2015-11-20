@@ -30,22 +30,28 @@ import time
 import sys
 import thread
 import os.path
-lib_path = os.path.abspath('utils')
+
+
+lib_path = os.path.abspath('../utils')
 sys.path.append(lib_path)
 from myParser import *
 from myCrypto import *
 import hashlib
 #from PIL import Image
 
+lib_path1 = os.path.abspath('../')
+sys.path.append(lib_path1)
+from config import *
+
 #host='udp.mysensors.info'
-host = 'localhost'
-port = 9090
-state = "INITIAL"
+
+#host = 'localhost'
+#port = 9090
+#state = "INITIAL"
 device = ""
-server = "mysensors"
+#server = "mysensors"
 serverPubKey = ""
 aesKeys = {}
-
 
 class mySensorDatagramProtocol(DatagramProtocol):
     def __init__(self, host, port, reactor):
