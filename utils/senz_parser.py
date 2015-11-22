@@ -9,8 +9,26 @@ from senz import *
 
 def parse(message):
     """
-    Parse incoming senz messages and create Senz objects
-    SHARE #bal #trans #nm #nic #time <time> @agent1 ^mysensors <sginature>
+    Parse incoming senz messages and create Senz objects. Senz message would be
+    looks like below
+
+        SHARE
+            #bal
+            #nm
+            #nic
+            #acc <acc>
+            #time <time>
+        @agent1
+        ^mysensors <sginature>
+
+    We have to valid senz messages from here as well. If invalid type of
+    message receives we have to raise and exception
+
+    Args:
+        message - senz message
+
+    Returns:
+        Senz object
     """
     senz = Senz()
     tokens = message.split()

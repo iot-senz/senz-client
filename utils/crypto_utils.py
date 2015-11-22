@@ -8,13 +8,22 @@ import os.path
 
 def init_keys():
     """
-    Initilize keys from here, device name exists in the 'name'. Verify
-    weather name file exists. If not exits we have to generate keys. We are
-    storing keys in .keys directory in project root
+    Initilize keys from here, device name exists in the 'name' file. Verify
+    weather name file exists. If not exits we have to generate keys(public key
+    and private key). We are storing keys in .keys/ directory in project root
+
+    We are doing
+        1. Create .keys directoy and name file
+        2. Generate rsa keys
+        3. Save ras keys in .keys directory
     """
     def init_dirs(senzy_name):
         """
-        Create .keys directory and name file if not exits
+        Create '.keys' directory and 'name' file if not exits. We have to write
+        senzy name in name file.
+
+        Args:
+            senzy_name - name of the senz client(username)
         """
         if not os.path.exists('.keys/name'):
             # first we have to create .keys/ directory if not exists
@@ -32,7 +41,8 @@ def init_keys():
 
     def save_key(file_name, key):
         """
-        Save key in .pem file
+        Save key in .pem file. We are saving both public key and private key
+        from here.
         """
         key_file = open('.keys/' + file_name, 'w')
         key_file.write(key)
@@ -54,8 +64,11 @@ def init_keys():
 
 def get_pubkey():
     """
-    Reads a public key from the file
-    return: Base64 encoded public key
+    Reads a public key from the file. Public key stored in .keys/publicKey.pem
+    file in project roor directory
+
+        Returns:
+            pubkey - Base64 encoded public key
     """
     pubkey = open('.keys/publicKey.pem', "r").read()
 
@@ -64,7 +77,29 @@ def get_pubkey():
 
 def sign_senz(senz):
     """
-    Sign senz with private key
+    Digitally sing the senz message. We have to append the digital signatutre
+    of the message to senz paylod before sending the senz. Senz message would
+    be comes like below
+
+        #SHARE
+            #msg #time <time>
+        @receiver
+        ^sender
+
+    We have to caculate digital signature of the message and append the
+    signature to the end of the senz. Finalized senz message would be looks
+    like below
+
+        #SHARE
+            #msg #time <time>
+        @receiver
+        ^sender <digital signature>
+
+    Args:
+        senz: Senz message
+
+    Returns:
+        digitally signed senz message
     """
     # load private key
     key = open('.keys/privateKey.pem', "r").read()
