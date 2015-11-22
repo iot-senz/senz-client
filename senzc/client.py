@@ -9,6 +9,7 @@ import os
 #TODO refactore paths
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
+sys.path.append(os.path.abspath('./handlers'))
 
 from crypto_utils import *
 from senz import *
@@ -28,7 +29,7 @@ class SenzcProtocol(DatagramProtocol):
         senz.pubkey = get_pubkey()
         senz.receiver = 'mysensors'
         senz.sender = 'test'
-        senz.attributes = {'time': time.time()}
+        senz.attributes['time'] = time.time()
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
                          (senz.pubkey, time.time(), senz.receiver, senz.sender)
         signed_senz = sign_senz(senz)
@@ -41,22 +42,9 @@ class SenzcProtocol(DatagramProtocol):
         print 'client stopped'
 
     def datagramReceived(self, datagram, host):
-        print 'Datagram received: ', repr(datagram)
-        handler = Handler(self.transport)
-        d = threads.deferToThread(handler.handleMessage, datagram)
+        handler = SenzHandler(self.transport)
+        d = threads.deferToThread(handler.handleSenz, datagram)
         d.addCallback(handler.postHandle)
-
-
-class Handler():
-    def __init__(self, transport):
-        self.transport = transport
-
-    def handleMessage(self, datagram):
-        print 'Handler Message: ', repr(datagram)
-        #self.transport.write('senz')
-
-    def postHandle(self, arg):
-        print 'post handling'
 
 
 def init():
