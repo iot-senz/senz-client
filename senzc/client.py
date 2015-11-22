@@ -1,4 +1,5 @@
 from twisted.internet.protocol import DatagramProtocol
+from twisted.internet.task import LoopingCall
 from twisted.internet import reactor, threads
 
 import time
@@ -23,38 +24,48 @@ class SenzcProtocol(DatagramProtocol):
     def startProtocol(self):
         print 'client started'
         self.transport.connect(self.host, self.port)
-        self.on_start_protocol()
+
+        # share public key on start
+        self.share_pubkey()
+
+        # start ping sender to send ping messages to server in everty 30 mins
+        lc = LoopingCall(self.send_ping)
+        lc.start(60 * 30)
 
     def stopProtocol(self):
-        # called when transport is disconnected
+        # Called when transport is disconnected
         print 'client stopped'
 
     def datagramReceived(self, datagram, host):
-        on_datagram_received(datagram)
+        print 'datagram received %s' % datagram
+        # parse datagram and get senz
+        self.handle_datagram(datagram)
 
-    def on_start_protocol(self):
-        """
-        Init senz protocol on connect the udp
-        """
+    def share_pubkey(self):
+        # TODO get sender and receiver config
         # send pubkey to server via SHARE senz
-        senz = Senz()
-        senz.pubkey = get_pubkey()
-        senz.receiver = 'mysensors'
-        senz.sender = 'test'
-        senz.attributes['time'] = time.time()
+        pubkey = get_pubkey()
+        receiver = 'mysensors'
+        sender = 'test'
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
-                         (senz.pubkey, time.time(), senz.receiver, senz.sender)
+                         (pubkey, time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
+
         self.transport.write(signed_senz)
 
-        # start ping sender to send pings in every 30 mins
-        lc = LoopingCall()
+    def send_ping(self):
+        # TODO get sender and receiver config
+        # send ping message to server via DATA senz
+        receiver = 'mysensors'
+        sender = 'test'
+        senz = "DATA #time %s @%s ^%s" % \
+                                    (time.time(), receiver, sender)
+        signed_senz = sign_senz(senz)
 
-    def on_datagram_received(self, datagram):
-        """
-        handler datagram on recived
-        """
-        # parse datagram and get senz
+        self.transport.write(signed_senz)
+
+    def handle_datagram(self, datagram):
+        # parse senz first
         senz = parse(datagram)
 
         if senz.type == 'PING':
@@ -63,7 +74,7 @@ class SenzcProtocol(DatagramProtocol):
         else:
             # start threads for GET, PUT, DATA, SHARE senz
             handler = SenzHandler(self.transport)
-            d = threads.deferToThread(handler.handleSenz, datagram)
+            d = threads.deferToThread(handler.handleSenz, senz)
             d.addCallback(handler.postHandle)
 
 
