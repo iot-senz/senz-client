@@ -2,7 +2,8 @@ class Senz(object):
     """
     Keep senz message attributes in here
     """
-    def __init__(self, type, sender, receiver, attributes, signature=None):
+    def __init__(self, type=None, sender=None, receiver=None, attributes=None,
+                 signature=None):
         """
         Senz object contains
             1. Type

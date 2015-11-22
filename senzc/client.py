@@ -7,10 +7,11 @@ import os
 
 
 #TODO refactore paths
-lib_path = os.path.abspath('./utils')
-sys.path.append(lib_path)
+sys.path.append(os.path.abspath('./utils'))
+sys.path.append(os.path.abspath('./models'))
 
 from crypto_utils import *
+from senz import *
 
 
 class SenzcProtocol(DatagramProtocol):
@@ -23,12 +24,15 @@ class SenzcProtocol(DatagramProtocol):
         self.transport.connect(self.host, self.port)
 
         # generate SHARE senz
-        pubkey = get_pubkey()
-        server = 'mysensors'
-        senzy_name = 'test'
+        senz = Senz()
+        senz.pubkey = get_pubkey()
+        senz.receiver = 'mysensors'
+        senz.sender = 'test'
+        senz.attributes = {'time': time.time()}
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
-                                    (pubkey, time.time(), server, senzy_name)
+                         (senz.pubkey, time.time(), senz.receiver, senz.sender)
         signed_senz = sign_senz(senz)
+        print signed_senz
 
         self.transport.write(signed_senz)
 
