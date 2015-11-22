@@ -42,7 +42,9 @@ def init_keys():
     def save_key(file_name, key):
         """
         Save key in .pem file. We are saving both public key and private key
-        from here.
+        from here. Folloing are the name and location of the keys
+            1. public key - .keys/publicKey.pem
+            2. private key - .keys/privateKey.pem
         """
         key_file = open('.keys/' + file_name, 'w')
         key_file.write(key)
