@@ -5,13 +5,13 @@ import time
 import sys
 import os
 
-
 #TODO refactore paths
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
 sys.path.append(os.path.abspath('./handlers'))
 
 from crypto_utils import *
+from senz_handler import *
 from senz import *
 
 
@@ -23,8 +23,20 @@ class SenzcProtocol(DatagramProtocol):
     def startProtocol(self):
         print 'client started'
         self.transport.connect(self.host, self.port)
+        self.on_start_protocol()
 
-        # generate SHARE senz
+    def stopProtocol(self):
+        # called when transport is disconnected
+        print 'client stopped'
+
+    def datagramReceived(self, datagram, host):
+        on_datagram_received(datagram)
+
+    def on_start_protocol(self):
+        """
+        Init senz protocol on connect the udp
+        """
+        # send pubkey to server via SHARE senz
         senz = Senz()
         senz.pubkey = get_pubkey()
         senz.receiver = 'mysensors'
@@ -33,18 +45,26 @@ class SenzcProtocol(DatagramProtocol):
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
                          (senz.pubkey, time.time(), senz.receiver, senz.sender)
         signed_senz = sign_senz(senz)
-        print signed_senz
-
         self.transport.write(signed_senz)
 
-    def stopProtocol(self):
-        # Called when transport is disconnected
-        print 'client stopped'
+        # start ping sender to send pings in every 30 mins
+        lc = LoopingCall()
 
-    def datagramReceived(self, datagram, host):
-        handler = SenzHandler(self.transport)
-        d = threads.deferToThread(handler.handleSenz, datagram)
-        d.addCallback(handler.postHandle)
+    def on_datagram_received(self, datagram):
+        """
+        handler datagram on recived
+        """
+        # parse datagram and get senz
+        senz = parse(datagram)
+
+        if senz.type == 'PING':
+            # we ingnore ping messages
+            print 'ping received'
+        else:
+            # start threads for GET, PUT, DATA, SHARE senz
+            handler = SenzHandler(self.transport)
+            d = threads.deferToThread(handler.handleSenz, datagram)
+            d.addCallback(handler.postHandle)
 
 
 def init():

@@ -1,7 +1,6 @@
 import sys
 import os
 
-
 #TODO refactore paths
 sys.path.append(os.path.abspath('./models'))
 
