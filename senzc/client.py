@@ -5,16 +5,32 @@ from twisted.internet import reactor, threads
 import time
 import sys
 import os
-
+import logging
 #TODO refactore paths
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
 sys.path.append(os.path.abspath('./handlers'))
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                            %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
+
+
+
 from crypto_utils import *
 from senz_handler import *
 from senz import *
 from config import *
+
 
 class SenzcProtocol(DatagramProtocol):
     """
@@ -42,23 +58,22 @@ class SenzcProtocol(DatagramProtocol):
             3. Finall need to start looping call to send ping messages to
                server in every 30 mins
         """
-        print 'client started'
+        logger.info('client started')
         self.transport.connect(self.host, self.port)
         # share public key on start
         self.share_pubkey()
-        #senz=sign_senz("PUT #s1 1 @pihome ^test")
-        #self.transport.write(senz)
 
         # start ping sender to send ping messages to server in everty 30 mins
-        #lc = LoopingCall(self.send_ping)
-        #lc.start(60 * 30)
-
+        lc = LoopingCall(self.send_ping)
+        lc.start(60 * 30)
+        #flag
+        #flag=0
     def stopProtocol(self):
         """
         Call when datagram protocol stops. Need to clear global connection if
         exits from here
         """
-        print 'client stopped'
+        logger.info('client stopped')
 
     def datagramReceived(self, datagram, host):
         """
@@ -70,7 +85,7 @@ class SenzcProtocol(DatagramProtocol):
             datagra - senz message
             host - receving host
         """
-        print 'datagram received %s' % datagram
+        logger.info('datagram received %s' % datagram)
 
         # handle receved datagram(senz)
         self.handle_datagram(datagram)
@@ -93,6 +108,7 @@ class SenzcProtocol(DatagramProtocol):
         pubkey = get_pubkey()
         receiver = servername
         sender = clientname
+
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
                          (pubkey, time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
@@ -111,15 +127,16 @@ class SenzcProtocol(DatagramProtocol):
             ^<sender> <digital signature>
         """
         # TODO get sender and receiver config
-
         # send ping message to server via DATA senz
-        receiver = servername
+        receiver = 'homep'
         sender = clientname
+
         senz = "DATA #time %s @%s ^%s" % \
                                     (time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
 
         self.transport.write(signed_senz)
+
 
     def handle_datagram(self, datagram):
         """
@@ -131,7 +148,7 @@ class SenzcProtocol(DatagramProtocol):
 
         if datagram == 'PING':
             # we ingnore ping messages
-            print 'ping received'
+            logger.info('ping received')
         else:
             # parse senz first
             senz = parse(datagram)

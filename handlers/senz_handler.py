@@ -1,12 +1,26 @@
-import time
 import sys
 import os
+import logging
 
 #TODO refactore paths
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
 
 from senz_parser import *
+from crypto_utils import *
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                                %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
 
 
 class SenzHandler():
@@ -37,13 +51,12 @@ class SenzHandler():
         called by twisted thread(thread safe mode via twisted library)
         """
 
-        print 'senz received %s' % senz.type
-
-        time.sleep(5)
+        logger.info( 'senz received %s' % senz.type)
 
     def postHandle(self, arg):
         """
         After handling senz message this function will be called. Basically
         this is a call back funcion
         """
+        logger.error("Post Handled")
         #self.transport.write('senz')

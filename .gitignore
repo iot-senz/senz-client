@@ -3,3 +3,4 @@ client/.*
 utils/.*
 .*
 !/.gitignore
+logs/client.log

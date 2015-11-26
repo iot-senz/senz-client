@@ -20,6 +20,20 @@
 ###############################################################################
 import sys
 import re
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                        %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
 
 class myParser:
    """
@@ -27,7 +41,7 @@ class myParser:
     by the Parser and obtained the query parameters.
     Appropriate action will be invoked by the MySensor Sever or Client.
    """
-  
+
    def __init__(self,msg):
       self.users=list()
       self.sensors=list()
@@ -43,8 +57,8 @@ class myParser:
       state='CLEAR'
       sen=""
       commandList=["SHARE","UNSHARE","PUT","GET","DATA"]
-      print msg
-      
+      logger.info( msg)
+
       while tList:
           word=tList.pop(0)
           self.senze+=word
@@ -114,7 +128,7 @@ testData=["SHARE #pubkey XXXXXXX #time t1 @mysensors ^kasun yyyyyyyyyy",
 
 for l in testData:
   m= myParser(l)
-  
+
   print "User List: ",m.getUsers()
   print "Sensors: ", m.getSensors()
   print "Data: ", m.getData()
