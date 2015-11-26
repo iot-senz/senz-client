@@ -39,6 +39,18 @@ class SenzHandler():
 
         print 'senz received %s' % senz.type
 
+        '''
+        parse('SHARE #bal #trans #nic 234 #time tim @agent ^myz <sig>')
+        parse('SHARE #bal #trans #nic #acc 4345234 #time tim @agent ^myz <sig>')
+        '''
+
+        #add DB Transactionlog
+        #add_epictr(tr_type varchar(45)>, agentid int, accnum varchar(45), tamount decimal(10,2), trF varchar(45), trT varchar(45));
+        #TR_BALANCE / TR_TRANSACTION
+
+        #args = ('TR_BALANCE','@agentid','@accno','@amount','@','BALANCE')
+        #callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
+
         time.sleep(5)
 
     def postHandle(self, arg):

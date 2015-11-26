@@ -7,10 +7,13 @@ import sys
 import os
 
 #TODO refactore paths
+sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./db'))
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
 sys.path.append(os.path.abspath('./handlers'))
 
+from db_handler import *
 from crypto_utils import *
 from senz_handler import *
 from senz import *
@@ -53,12 +56,21 @@ class SenzcProtocol(DatagramProtocol):
         #lc = LoopingCall(self.send_ping)
         #lc.start(60 * 30)
 
+        #add DB Transactionlog
+        #add_epictr(tr_type varchar(45)>, agentid int, accnum varchar(45), tamount decimal(10,2), trF varchar(45), trT varchar(45));
+        args = ('TR_STARTED',0,'--------',0.00,'C','C')
+        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
+
     def stopProtocol(self):
         """
         Call when datagram protocol stops. Need to clear global connection if
         exits from here
         """
         print 'client stopped'
+        #add DB Transactionlog
+        #add_epictr(tr_type varchar(45)>, agentid int, accnum varchar(45), tamount decimal(10,2), trF varchar(45), trT varchar(45));
+        args = ('TR_STOPED',0,'--------',0.00,'C','C')
+        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
 
     def datagramReceived(self, datagram, host):
         """
@@ -128,7 +140,6 @@ class SenzcProtocol(DatagramProtocol):
             2. We have to ignore ping messages from server
             3. We have to handler GET, SHARE, PUT senz messages via SenzHandler
         """
-
         if datagram == 'PING':
             # we ingnore ping messages
             print 'ping received'
