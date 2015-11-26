@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 
 if not(os.path.exists('logs')):
     os.mkdir('logs')
-    print "wohooooo"
+
 filehandler = logging.FileHandler('logs/client.log')
 filehandler.setLevel(logging.INFO)
 
