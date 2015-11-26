@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath('./handlers'))
 from crypto_utils import *
 from senz_handler import *
 from senz import *
-
+from config import *
 
 class SenzcProtocol(DatagramProtocol):
     """
@@ -44,13 +44,14 @@ class SenzcProtocol(DatagramProtocol):
         """
         print 'client started'
         self.transport.connect(self.host, self.port)
-
         # share public key on start
         self.share_pubkey()
+        #senz=sign_senz("PUT #s1 1 @pihome ^test")
+        #self.transport.write(senz)
 
         # start ping sender to send ping messages to server in everty 30 mins
-        lc = LoopingCall(self.send_ping)
-        lc.start(60 * 30)
+        #lc = LoopingCall(self.send_ping)
+        #lc.start(60 * 30)
 
     def stopProtocol(self):
         """
@@ -80,7 +81,7 @@ class SenzcProtocol(DatagramProtocol):
         digitally senz the senz before sending to server.
         SHARE senz message would be like below
 
-            SHARE
+            SHARE:
                 #pubkey <pubkey>
                 #time <time>
             @mysensors
@@ -90,8 +91,8 @@ class SenzcProtocol(DatagramProtocol):
 
         # send pubkey to server via SHARE senz
         pubkey = get_pubkey()
-        receiver = 'mysensors'
-        sender = 'test'
+        receiver = servername
+        sender = clientname
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
                          (pubkey, time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
@@ -112,8 +113,8 @@ class SenzcProtocol(DatagramProtocol):
         # TODO get sender and receiver config
 
         # send ping message to server via DATA senz
-        receiver = 'mysensors'
-        sender = 'test'
+        receiver = servername
+        sender = clientname
         senz = "DATA #time %s @%s ^%s" % \
                                     (time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
@@ -127,13 +128,14 @@ class SenzcProtocol(DatagramProtocol):
             2. We have to ignore ping messages from server
             3. We have to handler GET, SHARE, PUT senz messages via SenzHandler
         """
-        # parse senz first
-        senz = parse(datagram)
 
-        if senz.type == 'PING':
+        if datagram == 'PING':
             # we ingnore ping messages
             print 'ping received'
         else:
+            # parse senz first
+            senz = parse(datagram)
+
             # start threads for GET, PUT, DATA, SHARE senz
             handler = SenzHandler(self.transport)
             d = threads.deferToThread(handler.handleSenz, senz)
@@ -155,9 +157,10 @@ def start():
     Start upd senz protocol from here. It means connecting to senz server. We
     have to provide server host and port details form here.(read from config)
     """
+
     # TODO get host and port from config
-    host = '10.2.2.132'
-    port = 9999
+    host = serverhost
+    port = serverport
 
     # start ptotocol
     protocol = SenzcProtocol(host, port)

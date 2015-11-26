@@ -51,7 +51,7 @@ def init_keys():
         key_file.close()
 
     # TODO read senzy name from config file
-    senzy_name = 'test'
+    senzy_name = 'nash'
     init_dirs(senzy_name)
 
     # generate keys

@@ -25,7 +25,7 @@ class SenzHandler():
         Initilize udp transport from here. We can use transport to send message
         to udp socket
 
-        Args:
+        Arg
             trnsport - twisted transport instance
         """
         self.transport = transport
@@ -36,6 +36,7 @@ class SenzHandler():
         asynchronously. Whenc senz message receives this function will be
         called by twisted thread(thread safe mode via twisted library)
         """
+
         print 'senz received %s' % senz.type
 
         time.sleep(5)
@@ -45,4 +46,4 @@ class SenzHandler():
         After handling senz message this function will be called. Basically
         this is a call back funcion
         """
-        self.transport.write('senz')
+        #self.transport.write('senz')
