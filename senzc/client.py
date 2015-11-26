@@ -5,13 +5,30 @@ from twisted.internet import reactor, threads
 import time
 import sys
 import os
-
+import logging
 #TODO refactore paths
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./db'))
 sys.path.append(os.path.abspath('./utils'))
 sys.path.append(os.path.abspath('./models'))
 sys.path.append(os.path.abspath('./handlers'))
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+if not(os.path.exists('logs')):
+    os.mkdir('logs')
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                            %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
+
 
 from db_handler import *
 from crypto_utils import *
@@ -45,32 +62,33 @@ class SenzcProtocol(DatagramProtocol):
             3. Finall need to start looping call to send ping messages to
                server in every 30 mins
         """
-        print 'client started'
+        logger.info('client started')
         self.transport.connect(self.host, self.port)
         # share public key on start
         self.share_pubkey()
-        #senz=sign_senz("PUT #s1 1 @pihome ^test")
-        #self.transport.write(senz)
 
         # start ping sender to send ping messages to server in everty 30 mins
-        #lc = LoopingCall(self.send_ping)
-        #lc.start(60 * 30)
+        lc = LoopingCall(self.send_ping)
+        lc.start(60 * 30)
 
-        #add DB Transactionlog
-        #add_epictr(tr_type varchar(45)>, agentid int, accnum varchar(45), tamount decimal(10,2), trF varchar(45), trT varchar(45));
-        args = ('TR_STARTED',0,'--------',0.00,'C','C')
-        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
+        #TODO for testing
+        #DB TransactionLog Started
+        args = [0,0,'--------',0.00,'STARTED','B','B']
+        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s,%s);',args)
 
+        #flag
+        #flag=0
     def stopProtocol(self):
         """
         Call when datagram protocol stops. Need to clear global connection if
         exits from here
         """
-        print 'client stopped'
-        #add DB Transactionlog
-        #add_epictr(tr_type varchar(45)>, agentid int, accnum varchar(45), tamount decimal(10,2), trF varchar(45), trT varchar(45));
-        args = ('TR_STOPED',0,'--------',0.00,'C','C')
-        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
+        logger.info('client stopped')
+
+        #TODO for testing
+        #DB TransactionLog Started
+        args = [0,0,'--------',0.00,'STOPED','B','B']
+        callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s,%s);',args)
 
     def datagramReceived(self, datagram, host):
         """
@@ -82,7 +100,7 @@ class SenzcProtocol(DatagramProtocol):
             datagra - senz message
             host - receving host
         """
-        print 'datagram received %s' % datagram
+        logger.info('datagram received %s' % datagram)
 
         # handle receved datagram(senz)
         self.handle_datagram(datagram)
@@ -105,6 +123,7 @@ class SenzcProtocol(DatagramProtocol):
         pubkey = get_pubkey()
         receiver = servername
         sender = clientname
+
         senz = "SHARE #pubkey %s #time %s @%s ^%s" % \
                          (pubkey, time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
@@ -123,15 +142,16 @@ class SenzcProtocol(DatagramProtocol):
             ^<sender> <digital signature>
         """
         # TODO get sender and receiver config
-
         # send ping message to server via DATA senz
-        receiver = servername
+        receiver = 'homep'
         sender = clientname
+
         senz = "DATA #time %s @%s ^%s" % \
                                     (time.time(), receiver, sender)
         signed_senz = sign_senz(senz)
 
         self.transport.write(signed_senz)
+
 
     def handle_datagram(self, datagram):
         """
@@ -140,9 +160,10 @@ class SenzcProtocol(DatagramProtocol):
             2. We have to ignore ping messages from server
             3. We have to handler GET, SHARE, PUT senz messages via SenzHandler
         """
+
         if datagram == 'PING':
             # we ingnore ping messages
-            print 'ping received'
+            logger.info('ping received')
         else:
             # parse senz first
             senz = parse(datagram)
@@ -151,6 +172,12 @@ class SenzcProtocol(DatagramProtocol):
             handler = SenzHandler(self.transport)
             d = threads.deferToThread(handler.handleSenz, senz)
             d.addCallback(handler.postHandle)
+
+            #TODO replacing the following parameters with recieving senz
+            #DB TransactionLog Started
+
+            #args = ['TR_',0,'STARTED',0.00,'B','B']
+            #callproc(PySQLPool.getNewConnection(username='root', password='root@123', host='localhost', db='BankZ'),'add_epictr(%s,%s,%s,%s,%s,%s);',args)
 
 
 def init():

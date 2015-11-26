@@ -5,6 +5,20 @@ import os
 sys.path.append(os.path.abspath('./models'))
 
 from senz import *
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                            %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
 
 
 def parse(message):
@@ -58,12 +72,17 @@ def parse(message):
                 continue
 
         i += 1
+    logger.info(senz.type)
+    logger.info(senz.signature)
+    logger.info(senz.sender)
+    logger.info(senz.receiver)
+    logger.info(senz.attributes)
 
-    print senz.type
-    print senz.signature
-    print senz.sender
-    print senz.receiver
-    print senz.attributes
+    #print senz.type
+    #print senz.signature
+    #print senz.sender
+    #print senz.receiver
+    #print senz.attributes
 
     return senz
 

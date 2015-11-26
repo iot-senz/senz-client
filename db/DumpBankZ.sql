@@ -96,7 +96,7 @@ CREATE TABLE `EPICTransactionLog` (
   `trAmount` decimal(10,2) NOT NULL DEFAULT '0.00',
   `currentStatus` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`idETransactionLog`)
-) ENGINE=InnoDB AUTO_INCREMENT=263 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=271 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -220,7 +220,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_epictr`(/*OUT tkey int,*/tr_type varchar(45), agentid int, accnum varchar(45), tamount decimal(10,2),trF varchar(45), trT varchar(45))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_epictr`(/*OUT tkey int,*/tr_type varchar(45), agentid int, accnum varchar(45), tamount decimal(10,2),cstatus varchar(45),trF varchar(45), trT varchar(45))
 BEGIN
 		
 	DECLARE poid INT;
@@ -241,7 +241,7 @@ BEGIN
 	
 	-- Inert EPICTransactionLog
 	INSERT INTO `BankZ`.`EPICTransactionLog` (`trType`, `trBeginTime`, `idAgent`, `AccountNumber`, `trAmount`, `currentStatus`) 
-	VALUES (tr_type, now(), agentid, accnum, tamount, 'TR BEGIN');
+	VALUES (tr_type, now(), agentid, accnum, tamount, cstatus);
 	-- SELECT * FROM EPICTrans actionLog;
     
 	-- get last insert EPICTransactionLog id
@@ -249,7 +249,7 @@ BEGIN
 	
 	-- Insert TransactionStatusLog
 	INSERT INTO `BankZ`.`TransactionStatusLog`(`idETransactionLog`,`noStatus`,`status`,`statusTime`,`sFrom`,`sTo`)
-	VALUES(poid,1,"TR BEGIN",NOW(),trF,trT);
+	VALUES(poid,1,cstatus,NOW(),trF,trT);
 
 	-- SET tkey := poid;
 
@@ -310,4 +310,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-26 16:51:57
+-- Dump completed on 2015-11-26 19:13:10

@@ -4,6 +4,21 @@ from Crypto.Signature import PKCS1_v1_5
 from base64 import b64encode
 
 import os.path
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+filehandler = logging.FileHandler('logs/client.log')
+filehandler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \
+                                                            %(message)s')
+filehandler.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(filehandler)
+
 
 
 def init_keys():
@@ -30,14 +45,14 @@ def init_keys():
             try:
                 os.makedirs('.keys')
             except OSError:
-                print('keys exists')
+                logger.info('keys exists')
 
             # create name file from here
             senzy_name_file = open('.keys/name', 'w')
             senzy_name_file.write(senzy_name)
             senzy_name_file.close()
         else:
-            print('keys exists')
+            logger.info('keys exists')
 
     def save_key(file_name, key):
         """
